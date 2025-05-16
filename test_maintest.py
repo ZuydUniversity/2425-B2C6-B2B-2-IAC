@@ -2,7 +2,7 @@ import subprocess
 
 def test_maintest_output():
     result = subprocess.run(
-        ["python", "main.py"],
+        ["python", "maintest.py"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
