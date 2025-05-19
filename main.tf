@@ -14,6 +14,16 @@ provider "azurerm" {
   features {}
 }
 
+variable "image_registry_username" {
+    type = string
+    sensitive = true
+}
+
+variable "image_registry_password" {
+    type = string
+    sensitive = true
+}
+
 # Define the resource group
 resource "azurerm_resource_group" "rg" {
   name     = "2425-B2C6-B2B-2"
