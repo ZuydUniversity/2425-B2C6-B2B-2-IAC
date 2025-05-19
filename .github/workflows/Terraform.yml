@@ -16,9 +16,9 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-24.04
     env:
-      TF_VAR_image_registry_username: ${{ secrets.IMAGE_REGISTRY_USERNAME }}
-      TF_VAR_image_registry_password: ${{ secrets.IMAGE_REGISTRY_PASSWORD }}
-
+      TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
+      TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
+      
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
