@@ -15,13 +15,13 @@ provider "azurerm" {
 }
 
 variable "image_registry_username" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
 variable "image_registry_password" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
 # Define the resource group
@@ -62,8 +62,8 @@ resource "azurerm_container_group" "aci" {
   }
 
   container {
-    name = "nginx"
-    image = "${azurerm_container_registry.acr.login_server}/b2b-nginx:latest"
+    name   = "nginx"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:latest"
     cpu    = "0.25"
     memory = "0.5"
 
