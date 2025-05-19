@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Basic-Checkout
+name: Terraform
 
 # Controls when the workflow will run
 on:
@@ -22,13 +22,17 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          python-version: '3.10'
+          # The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
+          terraform_version: 1.12.0
 
-      - name: Install pytest
-        run: pip install pytest
+      - name: Terraform Init
+        run: terraform init
 
-      - name: Run tests
-        run: pytest
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
