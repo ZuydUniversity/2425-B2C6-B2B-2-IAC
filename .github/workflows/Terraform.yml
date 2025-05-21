@@ -36,11 +36,12 @@ jobs:
           terraform_version: 1.12.0
 
       - name: Terraform Init
-        run: terraform init \
-              -backend-config="resource_group_name=2425-B2C6-B2B-2" \
-              -backend-config="storage_account_name=b2b2tfstatestorage" \
-              -backend-config="container_name=tfstate" \
-              -backend-config="key=terraform.tfstate"
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=2425-B2C6-B2B-2" \
+            -backend-config="storage_account_name=b2b2tfstatestorage" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=terraform.tfstate"
 
       - name: Terraform Validate
         run: terraform validate
