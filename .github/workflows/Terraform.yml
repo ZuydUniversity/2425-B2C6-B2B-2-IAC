@@ -32,12 +32,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.12.0
-      
-      - name: Debug Azure Env Vars
-        run: |
-          echo "ARM_CLIENT_ID=$ARM_CLIENT_ID"
-          echo "ARM_TENANT_ID=$ARM_TENANT_ID"
-          echo "ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID"
 
       - name: Terraform Init
         run: terraform init
@@ -48,6 +42,11 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check
         continue-on-error: true
+
+        
+      - name: Terraform Import Resource Group
+        run: |
+          terraform import azurerm_resource_group.rg "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/2425-B2C6-B2B-2"
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
