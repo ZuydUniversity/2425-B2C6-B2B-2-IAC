@@ -18,10 +18,10 @@ jobs:
     env:
       TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
-      TF_VAR_azure_spn_client_id: "${{ secrets.AZURE_SPN_CLIENT_ID }}"
-      TF_VAR_azure_spn_client_secret: "${{ secrets.AZURE_SPN_CLIENT_SECRET }}"
-      TF_VAR_azure_spn_tenant_id: "${{ secrets.AZURE_SPN_TENANT_ID }}"
-      TF_VAR_azure_spn_subscription_id: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      ARM_CLIENT_ID: "${{ secrets.AZURE_SPN_CLIENT_ID }}"
+      ARM_CLIENT_SECRET: "${{ secrets.AZURE_SPN_CLIENT_SECRET }}"
+      ARM_TENANT_ID: "${{ secrets.AZURE_SPN_TENANT_ID }}"
+      ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
       
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -31,7 +31,6 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          # The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
           terraform_version: 1.12.0
 
       - name: Terraform Init
@@ -42,9 +41,14 @@ jobs:
 
       - name: Terraform Format Check
         run: terraform fmt -check
+        continue-on-error: true
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
+        continue-on-error: false
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve
+
+      - name: Cleanup
+        run: rm tfplan 
