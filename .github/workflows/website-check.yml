@@ -22,10 +22,11 @@ jobs:
             exit 1
           fi
         continue-on-error: true
+
       - name: https
         run: |
           echo "Website https check gestart..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://2425-B2C6-B2B-2.westeurope.azurecontainer.io)
+          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" https://2425-B2C6-B2B-2.westeurope.azurecontainer.io)
           if [ "$STATUS" -eq 200 ]; then
             echo "✅ Website is bereikbaar (status: $STATUS)"
           else
