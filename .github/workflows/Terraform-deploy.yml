@@ -41,7 +41,7 @@ jobs:
             -backend-config="container_name=tfstate" \
             -backend-config="key=terraform.tfstate"
 
-      - name: terraform plan
+      - name: Terraform plan
         run: terraform plan -out=tfplan
         continue-on-error: false
 

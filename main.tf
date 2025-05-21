@@ -73,6 +73,10 @@ resource "azurerm_container_group" "aci" {
       port     = 80
       protocol = "TCP"
     }
+    ports {
+      port     = 443
+      protocol = "TCP"
+    }
   }
 
   image_registry_credential {
