@@ -7,14 +7,25 @@ on:
       - completed
 
 jobs:
-  Website-check:
+  website-availability-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check if website is online
+      - name: http
         run: |
-          echo "Website check gestart..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://containergroupaci.westeurope.azurecontainer.io)
+          echo "Website http check gestart..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://2425-B2C6-B2B-2.westeurope.azurecontainer.io)
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Website is bereikbaar (status: $STATUS)"
+          else
+            echo "❌ Website is NIET bereikbaar (status: $STATUS)"
+            exit 1
+          fi
+        continue-on-error: true
+      - name: https
+        run: |
+          echo "Website https check gestart..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://2425-B2C6-B2B-2.westeurope.azurecontainer.io)
           if [ "$STATUS" -eq 200 ]; then
             echo "✅ Website is bereikbaar (status: $STATUS)"
           else
