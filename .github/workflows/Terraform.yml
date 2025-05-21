@@ -50,13 +50,6 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
         
-      - name: Terraform Import
-        run: |
-          terraform import azurerm_resource_group.rg "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/2425-B2C6-B2B-2"
-          terraform import azurerm_container_registry.acr "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/2425-B2C6-B2B-2/providers/Microsoft.ContainerRegistry/registries/containerRegistryB2B"
-
-        continue-on-error: true
-
       - name: Terraform Plan
         run: terraform plan -out=tfplan
         continue-on-error: false
