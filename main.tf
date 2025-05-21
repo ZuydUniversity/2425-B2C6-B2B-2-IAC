@@ -47,7 +47,7 @@ resource "azurerm_container_group" "aci" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
-  dns_name_label      = "containergroupaci"
+  dns_name_label      = "2425-B2C6-B2B-2"
   ip_address_type     = "Public"
 
   container {
