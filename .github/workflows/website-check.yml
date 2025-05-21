@@ -1,9 +1,10 @@
 name: Website Reachability Test
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:  # Handmatige start via GitHub interface
+  workflow_run:
+    workflows: ["Terraform"]  # Controleer eerst of Terraform (build) gelukt is
+    types:
+      - completed
 
 jobs:
   check-website:
