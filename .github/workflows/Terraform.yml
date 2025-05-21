@@ -21,6 +21,7 @@ jobs:
       ARM_CLIENT_SECRET: "${{ secrets.AZURE_SPN_CLIENT_SECRET }}"
       ARM_TENANT_ID: "${{ secrets.AZURE_SPN_TENANT_ID }}"
       ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      ARM_ACCESS_KEY: "${{ secrets.AZURE_STORAGE_ACCESS_KEY }}"
       TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
       
@@ -35,7 +36,11 @@ jobs:
           terraform_version: 1.12.0
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init \
+              -backend-config="resource_group_name=2425-B2C6-B2B-2" \
+              -backend-config="storage_account_name=b2b2tfstatestorage" \
+              -backend-config="container_name=tfstate" \
+              -backend-config="key=terraform.tfstate"
 
       - name: Terraform Validate
         run: terraform validate
@@ -49,7 +54,7 @@ jobs:
           terraform import azurerm_resource_group.rg "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/2425-B2C6-B2B-2"
           terraform import azurerm_container_registry.acr "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/2425-B2C6-B2B-2/providers/Microsoft.ContainerRegistry/registries/containerRegistryB2B"
         continue-on-error: true
-        
+
       - name: Terraform Plan
         run: terraform plan -out=tfplan
         continue-on-error: false
