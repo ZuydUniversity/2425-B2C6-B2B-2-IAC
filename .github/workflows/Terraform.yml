@@ -18,6 +18,10 @@ jobs:
     env:
       TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
+      TF_VAR_azure_spn_client_id: "${{ secrets.AZURE_SPN_CLIENT_ID }}"
+      TF_VAR_azure_spn_client_secret: "${{ secrets.AZURE_SPN_CLIENT_SECRET }}"
+      TF_VAR_azure_spn_tenant_id: "${{ secrets.AZURE_SPN_TENANT_ID }}"
+      TF_VAR_azure_spn_subscription_id: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
       
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:

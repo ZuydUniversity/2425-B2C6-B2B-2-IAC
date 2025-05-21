@@ -13,7 +13,7 @@ terraform {
 provider "azurerm" {
   features {}
 
-  client_id       = var_azure_spn_client_id
+  client_id       = var.azure_spn_client_id
   client_secret   = var.azure_spn_client_secret
   tenant_id       = var.azure_spn_tenant_id
   subscription_id = var.azure_spn_subscription_id
@@ -25,6 +25,26 @@ variable "image_registry_username" {
 }
 
 variable "image_registry_password" {
+  type      = string
+  sensitive = true
+}
+
+variable  "azure_spn_client_id" {
+  type      = string
+  sensitive = true
+}
+
+variable  "azure_spn_client_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable  "vazure_spn_tenant_id" {
+  type      = string
+  sensitive = true
+}
+
+variable  "aazure_spn_subscription_id" {
   type      = string
   sensitive = true
 }
