@@ -29,22 +29,22 @@ variable "image_registry_password" {
   sensitive = true
 }
 
-variable  "azure_spn_client_id" {
+variable "azure_spn_client_id" {
   type      = string
   sensitive = true
 }
 
-variable  "azure_spn_client_secret" {
+variable "azure_spn_client_secret" {
   type      = string
   sensitive = true
 }
 
-variable  "vazure_spn_tenant_id" {
+variable "azure_spn_tenant_id" {
   type      = string
   sensitive = true
 }
 
-variable  "aazure_spn_subscription_id" {
+variable "azure_spn_subscription_id" {
   type      = string
   sensitive = true
 }
