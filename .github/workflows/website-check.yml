@@ -1,0 +1,22 @@
+name: Website Reachability Test
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # Handmatige start via GitHub interface
+
+jobs:
+  check-website:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if website is online
+        run: |
+          echo "Website check gestart..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://containergroupaci.westeurope.azurecontainer.io)
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Website is bereikbaar (status: $STATUS)"
+          else
+            echo "❌ Website is NIET bereikbaar (status: $STATUS)"
+            exit 1
+          fi
