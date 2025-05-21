@@ -2,7 +2,7 @@ name: Website Reachability Test
 
 on:
   workflow_run:
-    workflows: ["Terraform"]  # Controleer eerst of Terraform (build) gelukt is
+    workflows: ["Terraform Apply"]  # Controleer eerst of Terraform (build) gelukt is
     types:
       - completed
 

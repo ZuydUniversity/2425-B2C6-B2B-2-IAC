@@ -1,15 +1,19 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Terraform
+name: Config Checks
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
+  Configchecks:
     # The type of runner that the job will run on
     runs-on: ubuntu-24.04
     env:
@@ -45,13 +49,3 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check
         continue-on-error: true
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        continue-on-error: false
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-
-      - name: Cleanup
-        run: rm tfplan 
