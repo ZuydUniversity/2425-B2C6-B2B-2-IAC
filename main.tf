@@ -53,7 +53,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:2025-05-26-10-23"
     cpu    = "0.5"
     memory = "1.5"
 
