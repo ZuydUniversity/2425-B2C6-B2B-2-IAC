@@ -16,6 +16,11 @@ provider "azurerm" {
   features {}
 }
 
+variable "frontend_image_tag" {
+  type        = string
+  description = "Laatste tag van de frontend image in ACR"
+}
+
 variable "image_registry_username" {
   type      = string
   sensitive = true
@@ -53,7 +58,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:2025-05-26-10-23"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:${var.frontend_image_tag}"
     cpu    = "0.5"
     memory = "1.5"
 
