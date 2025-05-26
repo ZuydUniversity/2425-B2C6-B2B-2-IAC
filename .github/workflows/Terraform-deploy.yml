@@ -22,6 +22,7 @@ jobs:
       ARM_ACCESS_KEY: "${{ secrets.AZURE_STORAGE_ACCESS_KEY }}"
       TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
+      TF_VAR_image_tag: "${{ github.sha }}"
       
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
