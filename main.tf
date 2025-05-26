@@ -26,10 +26,6 @@ variable "image_registry_password" {
   sensitive = true
 }
 
-variable "image_tag" {
-  type    = string
-  default = "latest"
-}
 
 # Define the resource group
 resource "azurerm_resource_group" "rg" {
@@ -57,7 +53,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:${var.image_tag}"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
     cpu    = "0.5"
     memory = "1.5"
 
@@ -70,7 +66,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "nginx"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:${var.image_tag}"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:latest"
     cpu    = "0.25"
     memory = "0.5"
 
