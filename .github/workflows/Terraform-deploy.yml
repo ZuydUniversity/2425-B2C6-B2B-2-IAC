@@ -22,12 +22,24 @@ jobs:
       ARM_ACCESS_KEY: "${{ secrets.AZURE_STORAGE_ACCESS_KEY }}"
       TF_VAR_image_registry_username: "${{ secrets.IMAGE_REGISTRY_USERNAME }}"
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
+      IMAGE_TAG: "${{ github.sha }}"
       TF_VAR_image_tag: "${{ github.sha }}"
+
       
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t $ACR_LOGIN_SERVER/b2b-frontend:$IMAGE_TAG ./frontend
+          docker push $ACR_LOGIN_SERVER/b2b-frontend:$IMAGE_TAG
+
+      - name: Build and push nginx image
+        run: |
+          docker build -t $ACR_LOGIN_SERVER/b2b-nginx:$IMAGE_TAG ./nginx
+          docker push $ACR_LOGIN_SERVER/b2b-nginx:$IMAGE_TAG
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
