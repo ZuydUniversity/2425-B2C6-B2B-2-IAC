@@ -34,6 +34,10 @@ jobs:
         with:
           terraform_version: 1.12.0
 
+      - name: Log in to Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Get latest frontend image tag from ACR
         id: get_tag
