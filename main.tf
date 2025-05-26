@@ -26,6 +26,11 @@ variable "image_registry_password" {
   sensitive = true
 }
 
+variable "image_tag" {
+  type    = string
+  default = "latest"
+}
+
 # Define the resource group
 resource "azurerm_resource_group" "rg" {
   name     = "2425-B2C6-B2B-2"
@@ -41,7 +46,7 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-# Creatre the container group where all the containers will be defined
+# Create the container group where all the containers will be defined
 resource "azurerm_container_group" "aci" {
   name                = "container_group_b2b"
   location            = azurerm_resource_group.rg.location
@@ -52,7 +57,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:${var.image_tag}"
     cpu    = "0.5"
     memory = "1.5"
 
@@ -65,7 +70,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "nginx"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:latest"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:${var.image_tag}"
     cpu    = "0.25"
     memory = "0.5"
 
