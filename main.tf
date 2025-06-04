@@ -93,16 +93,6 @@ container {
     memory = "2"
 
     ports {
-      port     = 80
-      protocol = "TCP"
-    }
-
-    ports {
-      port     = 443
-      protocol = "TCP"
-    }
-
-    ports {
       port     = 3306
       protocol = "TCP"
     }
@@ -112,6 +102,11 @@ container {
       protocol = "TCP"
     }
   }
+
+    ports {
+      port     = 1433
+      protocol = "TCP"
+    }
 
 
 
