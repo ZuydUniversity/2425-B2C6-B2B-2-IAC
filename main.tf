@@ -89,8 +89,8 @@ resource "azurerm_container_group" "aci" {
 container {
     name   = "backend-db"
     image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
-    cpu    = "1"
-    memory = "2"
+    cpu    = "0.5"
+    memory = "1"
 
     ports {
       port     = 3306
