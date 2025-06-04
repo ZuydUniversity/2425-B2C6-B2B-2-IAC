@@ -90,7 +90,7 @@ container {
     name   = "backend-db"
     image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
     cpu    = "0.5"
-    memory = "1"
+    memory = "2"
 
     ports {
       port     = 3306
