@@ -109,7 +109,7 @@ container {
 
     ports {
       port     = 22
-      protocol = "SSH"
+      protocol = "TCP"
     }
   }
 
