@@ -82,16 +82,16 @@ resource "azurerm_container_group" "aci" {
   }
 
   container {
-      name   = "backend-db"
-      image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
-      cpu    = "0.5"
-      memory = "1.5"
+    name   = "backend-db"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
+    cpu    = "0.5"
+    memory = "1.5"
 
-      ports {
-        port     = 22
-        protocol = "TCP"
-      }
+    ports {
+      port     = 22
+      protocol = "TCP"
     }
+  }
 
   image_registry_credential {
     server   = azurerm_container_registry.acr.login_server
