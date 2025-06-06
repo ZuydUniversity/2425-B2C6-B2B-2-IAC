@@ -40,20 +40,20 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
         continue-on-error: true
 
-      - name: Get latest frontend image tag from ACR
-        id: get_tag
-        run: |
-          ACR_NAME="containerRegistryB2B"
-          REPO_NAME="b2b-frontend"
-          TAG=$(az acr repository show-tags \
-            --name $ACR_NAME \
-            --repository $REPO_NAME \
-            --orderby time_desc \
-            --output tsv \
-            --top 1)
-          echo "Latest tag is $TAG"
-          echo "::set-output name=tag::$TAG"
-        continue-on-error: true
+      # - name: Get latest frontend image tag from ACR
+      #   id: get_tag
+      #   run: |
+      #     ACR_NAME="containerRegistryB2B"
+      #     REPO_NAME="b2b-frontend"
+      #     TAG=$(az acr repository show-tags \
+      #       --name $ACR_NAME \
+      #       --repository $REPO_NAME \
+      #       --orderby time_desc \
+      #       --output tsv \
+      #       --top 1)
+      #     echo "Latest tag is $TAG"
+      #     echo "::set-output name=tag::$TAG"
+      #   continue-on-error: true
 
       - name: Terraform Init
         run: |
@@ -63,8 +63,12 @@ jobs:
             -backend-config="container_name=tfstate" \
             -backend-config="key=terraform.tfstate"
 
+      # - name: Terraform plan
+      #   run: terraform plan -out=tfplan -var="frontend_image_tag=${{ steps.get_tag.outputs.tag }}"
+      #   continue-on-error: false
+
       - name: Terraform plan
-        run: terraform plan -out=tfplan -var="frontend_image_tag=${{ steps.get_tag.outputs.tag }}"
+        run: terraform plan -out=tfplan
         continue-on-error: false
 
       - name: Terraform apply

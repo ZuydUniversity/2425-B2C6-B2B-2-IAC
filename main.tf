@@ -16,11 +16,6 @@ provider "azurerm" {
   features {}
 }
 
-variable "frontend_image_tag" {
-  type        = string
-  description = "Laatste tag van de frontend image in ACR"
-}
-
 variable "image_registry_username" {
   type      = string
   sensitive = true
@@ -47,9 +42,9 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-# Create the container group where all the containers will be defined
+# Create a container group for hosting containers belonging to the frontend (for now it also includes backend)
 resource "azurerm_container_group" "aci" {
-  name                = "container_group_b2b"
+  name                = "container_group_frontend_b2b"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
@@ -58,7 +53,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:${var.frontend_image_tag}"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
     cpu    = "0.5"
     memory = "1.5"
 
@@ -86,20 +81,17 @@ resource "azurerm_container_group" "aci" {
     }
   }
 
-container {
-    name   = "backend-db"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
-    cpu    = "0.5"
-    memory = "1.5"
+  container {
+      name   = "backend-db"
+      image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
+      cpu    = "0.5"
+      memory = "1.5"
 
-    ports {
-      port     = 22
-      protocol = "TCP"
+      ports {
+        port     = 22
+        protocol = "TCP"
+      }
     }
-
-  }
-
-
 
   image_registry_credential {
     server   = azurerm_container_registry.acr.login_server
