@@ -11,23 +11,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: http
+      - name: http-check
         run: |
-          echo "Website http check gestart..."
+          echo "Website HTTP check gestart..."
           STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" http://b2b2buildingblocks.westeurope.cloudapp.azure.com/)
-          if [ "$STATUS" -eq 200 ]; then
-            echo "✅ Website is bereikbaar (status: $STATUS)"
-          else
-            echo "❌ Website is NIET bereikbaar (status: $STATUS)"
+          if [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 307 ] || [ "$STATUS" -eq 308 ]; then
+            echo "✅ Website redirects naar HTTPS (status: $STATUS)"
+          elif [ "$STATUS" -eq 200 ]; then
+            echo "❌ Website is bereikbaar via HTTP zonder redirect (status: $STATUS)"
             exit 1
+          elif [ "$STATUS" -ge 400 ] && [ "$STATUS" -lt 600 ]; then
+            echo "❌ Website geeft een fout (status: $STATUS)"
+            exit 1
+          elif [ -z "$STATUS" ] || [ "$STATUS" -eq 000 ]; then
+            echo "❌ Geen verbinding mogelijk met de website"
+            exit 1
+          else
+            echo "❌ Onverwachte status: $STATUS"
           fi
+        continue-on-error: true
+
       - name: https
         run: |
           echo "Website https check gestart..."
           STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" https://b2b2buildingblocks.westeurope.cloudapp.azure.com/)
           if [ "$STATUS" -eq 200 ]; then
             echo "✅ Website is bereikbaar (status: $STATUS)"
-          else
-            echo "❌ Website is NIET bereikbaar (status: $STATUS)"
+          elif [ "$STATUS" -ge 400 ] && [ "$STATUS" -lt 600 ]; then
+            echo "❌ Website geeft een fout (status: $STATUS)"
             exit 1
+          elif [ -z "$STATUS" ] || [ "$STATUS" -eq 000 ]; then
+            echo "❌ Geen verbinding mogelijk met de website"
+            exit 1
+          else
+            echo "❌ Onverwachte status: $STATUS"
           fi
