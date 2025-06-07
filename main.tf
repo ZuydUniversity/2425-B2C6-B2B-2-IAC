@@ -317,102 +317,70 @@ resource "azurerm_logic_app_workflow" "webhook_handler" {
   }
 }
 
-# Add the definition for the logic app
-# Currently it only checks if the updated image is 'b2b-frontend' and restarts the frontend-aci otherwise the backend-aci
-# This is enough for now.
-resource "azurerm_logic_app_action_custom" "webhook_handler_definition" {
-  name         = "webhook_handler_definition"
+# Create the webhook trigger
+resource "azurerm_logic_app_trigger_http_request" "webhook_trigger" {
+  name         = "manual"
   logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
-
-  body = jsonencode({
-    "$schema"        = "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-    "contentVersion" = "1.0.0.0",
-    "parameters" = {
-      "$connections" = {
-        "defaultValue" = {},
-        "type"         = "Object"
+  
+  schema = jsonencode({
+    "type" = "object",
+    "properties" = {
+      "id"        = { "type" = "string" },
+      "timestamp" = { "type" = "string" },
+      "action"    = { "type" = "string" },
+      "target" = {
+        "type" = "object",
+        "properties" = {
+          "repository" = { "type" = "string" },
+          "tag"        = { "type" = "string" }
+        }
       }
+    }
+  })
+}
+
+# Create a condition action
+resource "azurerm_logic_app_action_custom" "condition" {
+  name         = "Condition"
+  logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
+  
+  body = jsonencode({
+    "type" = "If",
+    "expression" = {
+      "and" = [
+        {
+          "contains" = [
+            "@triggerBody()?['target']?['repository']",
+            "b2b-frontend"
+          ]
+        }
+      ]
     },
-    "triggers" = {
-      "manual" = {
-        "type" = "Request",
-        "kind" = "Http",
+    "actions" = {
+      "Restart_Frontend_Container" = {
+        "type" = "Http",
         "inputs" = {
-          "schema" = {
-            "type" = "object",
-            "properties" = {
-              "id"        = { "type" = "string" },
-              "timestamp" = { "type" = "string" },
-              "action"    = { "type" = "string" },
-              "target" = {
-                "type" = "object",
-                "properties" = {
-                  "repository" = { "type" = "string" },
-                  "tag"        = { "type" = "string" }
-                }
-              }
-            }
+          "method" = "POST",
+          "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-frontend.name}/restart?api-version=2023-05-01",
+          "authentication" = {
+            "type" = "ManagedServiceIdentity"
           }
         }
       }
     },
-    "actions" = {
-      "Condition" = {
-        "type" = "If",
-        "expression" = {
-          "and" = [
-            {
-              "contains" = [
-                "@triggerBody()?['target']?['repository']",
-                "b2b-frontend"
-              ]
-            }
-          ]
-        },
-        "actions" = {
-          "Restart_Frontend_Container" = {
-            "type" = "Http",
-            "inputs" = {
-              "method" = "POST",
-              "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-frontend.name}/restart?api-version=2023-05-01",
-              "authentication" = {
-                "type" = "ManagedServiceIdentity"
-              }
-            },
-            "runAfter" = {}
+    "else" = {
+      "Restart_Backend_Container" = {
+        "type" = "Http",
+        "inputs" = {
+          "method" = "POST",
+          "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-backend.name}/restart?api-version=2023-05-01",
+          "authentication" = {
+            "type" = "ManagedServiceIdentity"
           }
-        },
-        "else" = {
-          "Restart_Backend_Container" = {
-            "type" = "Http",
-            "inputs" = {
-              "method" = "POST",
-              "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-backend.name}/restart?api-version=2023-05-01",
-              "authentication" = {
-                "type" = "ManagedServiceIdentity"
-              }
-            },
-            "runAfter" = {}
-          }
-        },
-        "runAfter" = {}
+        }
       }
-    },
-    "outputs" = {}
+    }
   })
-}
-
-# Grant permissions to Logic App identity
-resource "azurerm_role_assignment" "logic_app_frontend_contributor" {
-  scope                = azurerm_container_group.aci-frontend.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "logic_app_backend_contributor" {
-  scope                = azurerm_container_group.aci-backend.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
 }
 
 # Create a webhook for the frontend container group
@@ -446,7 +414,7 @@ resource "azurerm_container_registry_webhook" "backend_webhook" {
     "Content-Type" = "application/json"
   }
 
-  scope   = "b2b-api:latest,b2b-backend:latest"
+  scope   = "b2b-backend*:latest"
   actions = ["push"]
   status  = "enabled"
 }
