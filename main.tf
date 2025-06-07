@@ -26,10 +26,28 @@ variable "image_registry_password" {
   sensitive = true
 }
 
+variable "ssl_cert" {
+  type      = string
+  sensitive = true
+}
+
+variable "ssl_cert_password" {
+  type      = string
+  sensitive = true
+}
+
 # Define the resource group
 resource "azurerm_resource_group" "rg" {
   name     = "2425-B2C6-B2B-2"
   location = "westeurope"
+}
+
+resource "azurerm_public_ip" "appgw_ip" {
+  name                = "appgw-public-ip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 # Create a security group
@@ -76,7 +94,7 @@ resource "azurerm_subnet" "backend" {
   name                 = "backend-subnet"
   virtual_network_name = azurerm_virtual_network.vnet.name
   resource_group_name  = azurerm_resource_group.rg.name
-  address_prefixes     = ["10.0.2.0/24"]
+  address_prefixes     = ["10.0.2.0/29"]
 
   delegation {
     name = "aci-delegation"
@@ -90,6 +108,98 @@ resource "azurerm_subnet" "backend" {
     }
   }
 }
+
+# Create a dedicated subnet for the Application Gateway
+resource "azurerm_subnet" "appgw_subnet" {
+  name                 = "appgw-subnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.3.0/29"] # /29 is the maxium subnetmask allowed by Azure this only has 3 ip-address that can be used (the rest is used by Azure)
+}
+
+# Create an Application Gateway for routing public traffic to the correct subnet
+resource "azurerm_application_gateway" "appgw" {
+  name                = "appgateway"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  sku {
+    name     = "Standard_v2"
+    tier     = "Standard_v2"
+    capacity = 1
+  }
+
+  gateway_ip_configuration {
+    name      = "gateway-ip-config"
+    subnet_id = azurerm_subnet.appgw_subnet.id
+  }
+
+  frontend_port {
+    name = "frontend-port-80"
+    port = 80
+  }
+
+  frontend_port {
+    name = "frontend-port-443"
+    port = 443
+  }
+
+  frontend_ip_configuration {
+    name                 = "frontend-ip"
+    public_ip_address_id = azurerm_public_ip.appgw_ip.id
+  }
+
+  backend_address_pool {
+    name         = "frontend-backend-pool"
+    ip_addresses = ["10.0.1.4"]
+  }
+
+  backend_http_settings {
+    name                  = "backend-http-settings"
+    port                  = 80
+    protocol              = "Http"
+    cookie_based_affinity = "Disabled"
+    request_timeout       = 30
+  }
+
+  http_listener {
+    name                           = "http-listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "frontend-port-80"
+    protocol                       = "Http"
+  }
+
+  http_listener {
+    name                           = "https-listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "frontend-port-443"
+    protocol                       = "Https"
+    ssl_certificate_name           = "ssl-cert"
+  }
+
+  ssl_certificate {
+    name     = "ssl-cert"
+    data     = var.ssl_cert
+    password = var.ssl_cert_password
+  }
+
+  request_routing_rule {
+    name                       = "rule-80"
+    rule_type                  = "Basic"
+    http_listener_name         = "http-listener"
+    backend_address_pool_name  = "frontend-backend-pool"
+    backend_http_settings_name = "backend-http-settings"
+  }
+
+  request_routing_rule {
+    name                       = "rule-443"
+    rule_type                  = "Basic"
+    http_listener_name         = "https-listener"
+    backend_address_pool_name  = "frontend-backend-pool"
+    backend_http_settings_name = "backend-http-settings"
+  }
+}
+
 
 # Create a network profile for connecting endpoints to the subnet
 resource "azurerm_network_profile" "np-frontend" {
