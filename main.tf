@@ -165,12 +165,9 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   redirect_configuration {
-    name          = "http-to-https-redirect"
-    redirect_type = "Permanent"
-    target_listener_id = tolist([
-      for listener in azurerm_application_gateway.appgw.http_listener : listener.id
-      if listener.name == "https-listener"
-    ])[0]
+    name                 = "http-to-https-redirect"
+    redirect_type        = "Permanent"
+    target_listener_name = "https-listener"
     include_path         = true
     include_query_string = true
   }
