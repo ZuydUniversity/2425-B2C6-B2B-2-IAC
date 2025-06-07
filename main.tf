@@ -323,16 +323,26 @@ resource "azurerm_logic_app_trigger_http_request" "webhook_trigger" {
   logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
 
   schema = jsonencode({
-    "type" = "object",
-    "properties" = {
-      "id"        = { "type" = "string" },
-      "timestamp" = { "type" = "string" },
-      "action"    = { "type" = "string" },
-      "target" = {
-        "type" = "object",
-        "properties" = {
-          "repository" = { "type" = "string" },
-          "tag"        = { "type" = "string" }
+    "type" = "array",
+    "items" = {
+      "type" = "object",
+      "properties" = {
+        "topic"     = { "type" = "string" },
+        "subject"   = { "type" = "string" },
+        "eventType" = { "type" = "string" },
+        "eventTime" = { "type" = "string" },
+        "id"        = { "type" = "string" },
+        "data" = {
+          "type" = "object",
+          "properties" = {
+            "target" = {
+              "type" = "object",
+              "properties" = {
+                "repository" = { "type" = "string" },
+                "tag"        = { "type" = "string" }
+              }
+            }
+          }
         }
       }
     }
@@ -350,7 +360,7 @@ resource "azurerm_logic_app_action_custom" "condition" {
       "and" = [
         {
           "contains" = [
-            "@triggerBody()?['target']?['repository']",
+            "@triggerBody()?[0]?['data']?['target']?['repository']",
             "b2b-frontend"
           ]
         }
@@ -386,38 +396,53 @@ resource "azurerm_logic_app_action_custom" "condition" {
   })
 }
 
-# Create a webhook for the frontend container group
-resource "azurerm_container_registry_webhook" "frontend_webhook" {
-  name                = "frontendwebhook"
-  resource_group_name = azurerm_resource_group.rg.name
-  registry_name       = azurerm_container_registry.acr.name
-  location            = azurerm_resource_group.rg.location
-
-  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
-
-  custom_headers = {
-    "Content-Type" = "application/json"
-  }
-
-  scope   = "b2b-frontend:latest"
-  actions = ["push"]
-  status  = "enabled"
+# Create an Event Grid System Topic for ACR events
+resource "azurerm_eventgrid_system_topic" "acr_events" {
+  name                   = "acr-events"
+  resource_group_name    = azurerm_resource_group.rg.name
+  location               = azurerm_resource_group.rg.location
+  source_arm_resource_id = azurerm_container_registry.acr.id
+  topic_type             = "Microsoft.ContainerRegistry.Registries"
 }
 
-# Create a webhook for the backend container group
-resource "azurerm_container_registry_webhook" "backend_webhook" {
-  name                = "backendwebhook"
+# Create an Event Grid subscription to the Logic App
+resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscription" {
+  name                = "logic-app-subscription"
+  system_topic        = azurerm_eventgrid_system_topic.acr_events.name
   resource_group_name = azurerm_resource_group.rg.name
-  registry_name       = azurerm_container_registry.acr.name
-  location            = azurerm_resource_group.rg.location
 
-  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
-
-  custom_headers = {
-    "Content-Type" = "application/json"
+  webhook_endpoint {
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}triggers/manual/run?api-version=2016-10-01"
   }
 
-  scope   = "b2b-api:latest"
-  actions = ["push"]
-  status  = "enabled"
+  included_event_types = ["Microsoft.ContainerRegistry.ImagePushed"]
+
+  # Filter to match your repositories
+  advanced_filter {
+    string_contains {
+      key    = "data.target.repository"
+      values = ["b2b-frontend"]
+    }
+  }
+}
+
+# Create a second subscription for backend images
+resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscription_backend" {
+  name                = "logic-app-subscription-backend"
+  system_topic        = azurerm_eventgrid_system_topic.acr_events.name
+  resource_group_name = azurerm_resource_group.rg.name
+
+  webhook_endpoint {
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}triggers/manual/run?api-version=2016-10-01"
+  }
+
+  included_event_types = ["Microsoft.ContainerRegistry.ImagePushed"]
+
+  # Filter for backend repositories
+  advanced_filter {
+    string_contains {
+      key    = "data.target.repository"
+      values = ["b2b-api", "b2b-backend"]
+    }
+  }
 }
