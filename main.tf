@@ -157,11 +157,22 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   backend_http_settings {
-    name                  = "backend-http-settings"
-    port                  = 80
+    name                  = "http-settings-3000"
+    port                  = 3000
     protocol              = "Http"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
+  }
+
+  redirect_configuration {
+    name          = "http-to-https-redirect"
+    redirect_type = "Permanent"
+    target_listener_id = tolist([
+      for listener in azurerm_application_gateway.appgw.http_listener : listener.id
+      if listener.name == "https-listener"
+    ])[0]
+    include_path         = true
+    include_query_string = true
   }
 
   http_listener {
@@ -186,11 +197,10 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   request_routing_rule {
-    name                       = "rule-80"
-    rule_type                  = "Basic"
-    http_listener_name         = "http-listener"
-    backend_address_pool_name  = "frontend-pool"
-    backend_http_settings_name = "backend-http-settings"
+    name                        = "rule-80"
+    rule_type                   = "Basic"
+    http_listener_name          = "http-listener"
+    redirect_configuration_name = "http-to-https-redirect"
   }
 
   request_routing_rule {
@@ -198,7 +208,7 @@ resource "azurerm_application_gateway" "appgw" {
     rule_type                  = "Basic"
     http_listener_name         = "https-listener"
     backend_address_pool_name  = "frontend-pool"
-    backend_http_settings_name = "backend-http-settings"
+    backend_http_settings_name = "http-settings-3000"
   }
 }
 
@@ -256,12 +266,7 @@ resource "azurerm_container_group" "aci-frontend" {
 
     # Open ports of the container
     ports {
-      port     = 80
-      protocol = "TCP"
-    }
-
-    ports {
-      port     = 443
+      port     = 3000
       protocol = "TCP"
     }
   }
