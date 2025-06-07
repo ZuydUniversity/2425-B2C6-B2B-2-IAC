@@ -48,6 +48,7 @@ resource "azurerm_public_ip" "appgw_ip" {
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
   sku                 = "Standard"
+  domain_name_label   = "b2b2buildingblocks"
 }
 
 # Create a security group
@@ -63,10 +64,6 @@ resource "azurerm_virtual_network" "vnet" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = ["10.0.0.0/16"]
-
-  tags = {
-    environment = "Production"
-  }
 }
 
 # Create virtual network for frontend
@@ -74,7 +71,7 @@ resource "azurerm_subnet" "frontend" {
   name                 = "frontend-subnet"
   virtual_network_name = azurerm_virtual_network.vnet.name
   resource_group_name  = azurerm_resource_group.rg.name
-  address_prefixes     = ["10.0.1.0/24"]
+  address_prefixes     = ["10.0.1.0/29"] # /29 is the highest subnetmask allowed by Azure this only has 3 ip-address that can be used (the rest is used by Azure)
 
   delegation {
     name = "aci-delegation"
@@ -112,9 +109,9 @@ resource "azurerm_subnet" "backend" {
 # Create a dedicated subnet for the Application Gateway
 resource "azurerm_subnet" "appgw_subnet" {
   name                 = "appgw-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.3.0/29"] # /29 is the maxium subnetmask allowed by Azure this only has 3 ip-address that can be used (the rest is used by Azure)
+  resource_group_name  = azurerm_resource_group.rg.name
+  address_prefixes     = ["10.0.3.0/24"]
 }
 
 # Create an Application Gateway for routing public traffic to the correct subnet
@@ -150,8 +147,13 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   backend_address_pool {
-    name         = "frontend-backend-pool"
+    name         = "frontend-pool"
     ip_addresses = ["10.0.1.4"]
+  }
+
+  backend_address_pool {
+    name         = "backend-pool"
+    ip_addresses = ["10.0.2.4"]
   }
 
   backend_http_settings {
@@ -187,7 +189,7 @@ resource "azurerm_application_gateway" "appgw" {
     name                       = "rule-80"
     rule_type                  = "Basic"
     http_listener_name         = "http-listener"
-    backend_address_pool_name  = "frontend-backend-pool"
+    backend_address_pool_name  = "frontend-pool"
     backend_http_settings_name = "backend-http-settings"
   }
 
@@ -195,11 +197,10 @@ resource "azurerm_application_gateway" "appgw" {
     name                       = "rule-443"
     rule_type                  = "Basic"
     http_listener_name         = "https-listener"
-    backend_address_pool_name  = "frontend-backend-pool"
+    backend_address_pool_name  = "frontend-pool"
     backend_http_settings_name = "backend-http-settings"
   }
 }
-
 
 # Create a network profile for connecting endpoints to the subnet
 resource "azurerm_network_profile" "np-frontend" {
