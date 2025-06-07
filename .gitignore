@@ -1,6 +1,6 @@
 /.terraform
 .terraform.lock.hcl
-.csr
-.ssl
-.key
-.crt
+*.csr
+*.ssl
+*.crt
+*.key
