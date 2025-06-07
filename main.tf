@@ -343,13 +343,49 @@ resource "azurerm_logic_app_trigger_http_request" "webhook_trigger" {
               }
             }
           }
-        }
+        },
+        "validationCode" = { "type" = "string" }
       }
     }
   })
 }
 
-# Create a condition action
+# Add a validation response action
+resource "azurerm_logic_app_action_custom" "validation_response" {
+  name         = "ValidationResponse"
+  logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
+
+  body = jsonencode({
+    "type" = "If",
+    "expression" = {
+      "and" = [
+        {
+          "not" = {
+            "equals" = [
+              "@triggerBody()?[0]?['validationCode']",
+              null
+            ]
+          }
+        }
+      ]
+    },
+    "actions" = {
+      "Response" = {
+        "type" = "Response",
+        "kind" = "Http",
+        "inputs" = {
+          "statusCode" = 200,
+          "body" = {
+            "validationResponse" = "@triggerBody()?[0]?['validationCode']"
+          }
+        }
+      }
+    },
+    "runAfter" = {}
+  })
+}
+
+# Add the actual restart action
 resource "azurerm_logic_app_action_custom" "condition" {
   name         = "Condition"
   logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
@@ -362,6 +398,12 @@ resource "azurerm_logic_app_action_custom" "condition" {
           "contains" = [
             "@triggerBody()?[0]?['data']?['target']?['repository']",
             "b2b-frontend"
+          ]
+        },
+        {
+          "equals" = [
+            "@triggerBody()?[0]?['validationCode']",
+            null
           ]
         }
       ]
@@ -378,7 +420,9 @@ resource "azurerm_logic_app_action_custom" "condition" {
         }
       }
     },
-    "runAfter" = {},
+    "runAfter" = {
+      "ValidationResponse" = ["Succeeded"]
+    },
     "else" = {
       "actions" = {
         "Restart_Backend_Container" = {
