@@ -424,6 +424,12 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
       values = ["b2b-frontend"]
     }
   }
+
+  delivery_property {
+    header_name = "X-Event-Type"
+    type        = "Static"
+    value       = "ACRImagePushed"
+  }
 }
 
 # Create a second subscription for backend images
@@ -444,5 +450,11 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
       key    = "data.target.repository"
       values = ["b2b-api", "b2b-backend"]
     }
+  }
+
+  delivery_property {
+    header_name = "X-Event-Type"
+    type        = "Static"
+    value       = "ACRImagePushed"
   }
 }
