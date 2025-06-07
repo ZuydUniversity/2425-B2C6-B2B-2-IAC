@@ -11,10 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: http
+        run: |
+          echo "Website http check gestart..."
+          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" http://b2b2buildingblocks.westeurope.cloudapp.azure.com/)
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Website is bereikbaar (status: $STATUS)"
+          else
+            echo "❌ Website is NIET bereikbaar (status: $STATUS)"
+            exit 1
+          fi
       - name: https
         run: |
           echo "Website https check gestart..."
-          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" https://2425-B2C6-B2B-2.westeurope.azurecontainer.io)
+          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" https://b2b2buildingblocks.westeurope.cloudapp.azure.com/)
           if [ "$STATUS" -eq 200 ]; then
             echo "✅ Website is bereikbaar (status: $STATUS)"
           else
