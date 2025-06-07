@@ -456,7 +456,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   resource_group_name = azurerm_resource_group.rg.name
 
   webhook_endpoint {
-    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/invoke?api-version=2016-10-01"
 
     max_events_per_batch              = 1
     preferred_batch_size_in_kilobytes = 64
@@ -488,7 +488,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   resource_group_name = azurerm_resource_group.rg.name
 
   webhook_endpoint {
-    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/invoke?api-version=2016-10-01"
 
     max_events_per_batch              = 1
     preferred_batch_size_in_kilobytes = 64
