@@ -256,18 +256,6 @@ resource "azurerm_container_group" "aci-frontend" {
 
     # Open ports of the container
     ports {
-      port     = 3000
-      protocol = "TCP"
-    }
-  }
-
-  container {
-    name   = "nginx"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-nginx:latest"
-    cpu    = "0.25"
-    memory = "0.5"
-
-    ports {
       port     = 80
       protocol = "TCP"
     }
