@@ -457,7 +457,12 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
 
   webhook_endpoint {
     url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
+
+    max_events_per_batch              = 1
+    preferred_batch_size_in_kilobytes = 64
   }
+
+  event_delivery_schema = "EventGridSchema"
 
   included_event_types = ["Microsoft.ContainerRegistry.ImagePushed"]
 
@@ -484,7 +489,11 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
 
   webhook_endpoint {
     url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
+
+    max_events_per_batch              = 1
+    preferred_batch_size_in_kilobytes = 64
   }
+  event_delivery_schema = "EventGridSchema"
 
   included_event_types = ["Microsoft.ContainerRegistry.ImagePushed"]
 
