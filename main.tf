@@ -393,7 +393,7 @@ resource "azurerm_container_registry_webhook" "frontend_webhook" {
   registry_name       = azurerm_container_registry.acr.name
   location            = azurerm_resource_group.rg.location
 
-  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}triggers/manual/run?api-version=2016-10-01"
+  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
 
   custom_headers = {
     "Content-Type" = "application/json"
@@ -411,7 +411,7 @@ resource "azurerm_container_registry_webhook" "backend_webhook" {
   registry_name       = azurerm_container_registry.acr.name
   location            = azurerm_resource_group.rg.location
 
-  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}triggers/manual/run?api-version=2016-10-01"
+  service_uri = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/run?api-version=2016-10-01"
 
   custom_headers = {
     "Content-Type" = "application/json"
