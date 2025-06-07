@@ -321,7 +321,7 @@ resource "azurerm_logic_app_workflow" "webhook_handler" {
 resource "azurerm_logic_app_trigger_http_request" "webhook_trigger" {
   name         = "manual"
   logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
-  
+
   schema = jsonencode({
     "type" = "object",
     "properties" = {
@@ -343,7 +343,7 @@ resource "azurerm_logic_app_trigger_http_request" "webhook_trigger" {
 resource "azurerm_logic_app_action_custom" "condition" {
   name         = "Condition"
   logic_app_id = azurerm_logic_app_workflow.webhook_handler.id
-  
+
   body = jsonencode({
     "type" = "If",
     "expression" = {
@@ -368,14 +368,17 @@ resource "azurerm_logic_app_action_custom" "condition" {
         }
       }
     },
+    "runAfter" = {},
     "else" = {
-      "Restart_Backend_Container" = {
-        "type" = "Http",
-        "inputs" = {
-          "method" = "POST",
-          "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-backend.name}/restart?api-version=2023-05-01",
-          "authentication" = {
-            "type" = "ManagedServiceIdentity"
+      "actions" = {
+        "Restart_Backend_Container" = {
+          "type" = "Http",
+          "inputs" = {
+            "method" = "POST",
+            "uri"    = "https://management.azure.com/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.rg.name}/providers/Microsoft.ContainerInstance/containerGroups/${azurerm_container_group.aci-backend.name}/restart?api-version=2023-05-01",
+            "authentication" = {
+              "type" = "ManagedServiceIdentity"
+            }
           }
         }
       }
@@ -414,7 +417,7 @@ resource "azurerm_container_registry_webhook" "backend_webhook" {
     "Content-Type" = "application/json"
   }
 
-  scope   = "b2b-backend*:latest"
+  scope   = "b2b-api:latest"
   actions = ["push"]
   status  = "enabled"
 }
