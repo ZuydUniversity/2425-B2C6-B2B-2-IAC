@@ -46,19 +46,52 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = ["10.0.0.0/16"]
 
-  subnet {
-    name           = "frontend-subnet"
-    address_prefix = "10.0.1.0/24"
-  }
-
-  subnet {
-    name           = "backend-subnet"
-    address_prefix = "10.0.2.0/24"
-    security_group = azurerm_network_security_group.nsg.id
-  }
-
   tags = {
     environment = "Production"
+  }
+}
+
+# Create virtual network for frontend
+resource "azurerm_subnet" "frontend" {
+  name                 = "frontend-subnet"
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  resource_group_name  = azurerm_resource_group.rg.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+# Create virtual network for backend
+resource "azurerm_subnet" "backend" {
+  name                 = "backend-subnet"
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  resource_group_name  = azurerm_resource_group.rg.name
+  address_prefixes     = ["10.0.2.0/24"]
+}
+
+# Create a network profile for connecting endpoints to the subnet
+resource "azurerm_network_profile" "np-frontend" {
+  name                = "network-profile-frontend"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  container_network_interface {
+    name = "frontend-nic"
+    ip_configuration {
+      name      = "frontend-ip-config"
+      subnet_id = azurerm_subnet.frontend.id
+    }
+  }
+}
+
+# Same as above but then for backend
+resource "azurerm_network_profile" "np-backend" {
+  name                = "network-profile-backend"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  container_network_interface {
+    name = "backend-nic"
+    ip_configuration {
+      name      = "backend-ip-config"
+      subnet_id = azurerm_subnet.backend.id
+    }
   }
 }
 
@@ -71,14 +104,13 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-# Create a container group for hosting containers belonging to the frontend (for now it also includes backend)
-resource "azurerm_container_group" "aci" {
+# Create a container group for hosting containers for the frontend services
+resource "azurerm_container_group" "aci-frontend" {
   name                = "container_group_frontend_b2b"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
-  dns_name_label      = "2425-B2C6-B2B-2"
-  ip_address_type     = "Public"
+  network_profile_id  = azurerm_network_profile.np-frontend.id
 
   container {
     name   = "frontendapp"
@@ -109,6 +141,21 @@ resource "azurerm_container_group" "aci" {
       protocol = "TCP"
     }
   }
+
+  image_registry_credential {
+    server   = azurerm_container_registry.acr.login_server
+    username = var.image_registry_username
+    password = var.image_registry_password
+  }
+}
+
+# Container group for the backend services (still need to change the database and API image.)
+resource "azurerm_container_group" "aci-backend" {
+  name                = "container_group_backend_b2b"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  os_type             = "Linux"
+  network_profile_id  = azurerm_network_profile.np-backend.id
 
   container {
     name   = "backend-db"
