@@ -456,7 +456,8 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   resource_group_name = azurerm_resource_group.rg.name
 
   webhook_endpoint {
-    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/paths/invoke?api-version=2016-10-01"
+    #hardcoded signature for validation, this will break when recreating the logic app / workflow..
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RhDjb_kv12Z0deiV6SbUVkXPT3pCfTaCIo7mtBhNDwo"
 
     max_events_per_batch              = 1
     preferred_batch_size_in_kilobytes = 64
@@ -488,7 +489,8 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   resource_group_name = azurerm_resource_group.rg.name
 
   webhook_endpoint {
-    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/paths/invoke?api-version=2016-10-01"
+    #hardcoded signature for validation, this will break when recreating the logic app / workflow..
+    url = "${azurerm_logic_app_workflow.webhook_handler.access_endpoint}/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RhDjb_kv12Z0deiV6SbUVkXPT3pCfTaCIo7mtBhNDwo"
 
     max_events_per_batch              = 1
     preferred_batch_size_in_kilobytes = 64
