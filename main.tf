@@ -85,22 +85,9 @@ resource "azurerm_network_security_group" "backend-nsg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "8081"        # HTTPS port used by API
+    destination_port_range     = "8080"        # HTTP port used by API
     source_address_prefix      = "10.0.3.0/24" # Gateway subnet
     destination_address_prefix = "10.0.2.0/29" # Backend subnet
-  }
-
-  # Security rule to deny all other traffic
-  security_rule {
-    name                       = "DenyAllInbound"
-    priority                   = 200
-    direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
   }
 }
 
@@ -195,8 +182,8 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary port to test the API
   frontend_port {
-    name = "frontend-port-8081"
-    port = 8081
+    name = "frontend-port-8080"
+    port = 8080
   }
 
   frontend_ip_configuration {
@@ -224,9 +211,9 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary to test API
   backend_http_settings {
-    name                  = "http-settings-8081"
-    port                  = 8081
-    protocol              = "Https"
+    name                  = "http-settings-8080"
+    port                  = 8080
+    protocol              = "Http"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
   }
@@ -258,9 +245,8 @@ resource "azurerm_application_gateway" "appgw" {
   http_listener {
     name                           = "api-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "frontend-port-8081"
-    protocol                       = "Https"
-    ssl_certificate_name           = "ssl-cert"
+    frontend_port_name             = "frontend-port-8080"
+    protocol                       = "Http"
   }
 
   ssl_certificate {
@@ -286,11 +272,11 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary to test API
   request_routing_rule {
-    name                       = "rule-8081"
+    name                       = "rule-8080"
     rule_type                  = "Basic"
     http_listener_name         = "api-listener"
     backend_address_pool_name  = "backend-pool"
-    backend_http_settings_name = "http-settings-8081"
+    backend_http_settings_name = "http-settings-8080"
   }
 }
 
@@ -534,12 +520,6 @@ resource "azurerm_logic_app_action_custom" "condition" {
           "contains" = [
             "@triggerBody()?[0]?['data']?['target']?['repository']",
             "b2b-frontend"
-          ]
-        },
-        {
-          "equals" = [
-            "@triggerBody()?[0]?['validationCode']",
-            null
           ]
         }
       ]
