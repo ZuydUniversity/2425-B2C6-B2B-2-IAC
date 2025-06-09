@@ -24,6 +24,7 @@ jobs:
       TF_VAR_image_registry_password: "${{ secrets.IMAGE_REGISTRY_PASSWORD }}"
       TF_VAR_ssl_cert_password: "${{ secrets.APPGW_SSL_CERT_PASSWORD }}"
       TF_VAR_ssl_cert: "${{ secrets.APPGW_SSL_CERT }}"
+      TF_VAR_sql_sa_password: "${{ secrets.SQL_SA_PASSWORD }}"
 
       
     # Steps represent a sequence of tasks that will be executed as part of the job

@@ -36,6 +36,11 @@ variable "ssl_cert_password" {
   sensitive = true
 }
 
+variable "sql_sa_password" {
+  type      = string
+  sensitive = true
+}
+
 # Data source to get current subscription ID
 data "azurerm_subscription" "current" {}
 
@@ -55,10 +60,54 @@ resource "azurerm_public_ip" "appgw_ip" {
 }
 
 # Create a security group
-resource "azurerm_network_security_group" "nsg" {
-  name                = "network-security-group"
+resource "azurerm_network_security_group" "backend-nsg" {
+  name                = "backend-nsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "AllowFrontendToDB"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"        # Database port
+    source_address_prefix      = "10.0.1.0/29" # FROM frontend IP-addresses
+    destination_address_prefix = "10.0.2.0/29" # TO backend IP-addresses
+  }
+
+  # Temporary rule to test if the API is accessible
+  security_rule {
+    name                       = "AllowPublicToApiTEMP"
+    priority                   = 105
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8081" # HTTPS port used by API
+    source_address_prefix      = "10.0.3.0/24" # Gateway subnet
+    destination_address_prefix = "10.0.2.0/29" # Backend subnet
+  }
+
+  # Security rule to deny all other traffic
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+# Connect the security group to the backend subnet
+resource "azurerm_subnet_network_security_group_association" "backend_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.backend.id
+  network_security_group_id = azurerm_network_security_group.backend-nsg.id
 }
 
 # Create a virtual network
@@ -144,6 +193,12 @@ resource "azurerm_application_gateway" "appgw" {
     port = 443
   }
 
+  # Temporary port to test the API
+  frontend_port {
+    name = "frontend-port-8081"
+    port = 8081
+  }
+
   frontend_ip_configuration {
     name                 = "frontend-ip"
     public_ip_address_id = azurerm_public_ip.appgw_ip.id
@@ -163,6 +218,15 @@ resource "azurerm_application_gateway" "appgw" {
     name                  = "http-settings-3000"
     port                  = 3000
     protocol              = "Http"
+    cookie_based_affinity = "Disabled"
+    request_timeout       = 30
+  }
+
+  # Temporary to test API
+  backend_http_settings {
+    name                  = "http-settings-8081"
+    port                  = 8081
+    protocol              = "Https"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
   }
@@ -190,6 +254,15 @@ resource "azurerm_application_gateway" "appgw" {
     ssl_certificate_name           = "ssl-cert"
   }
 
+  # Temporary to test API
+  http_listener {
+    name                           = "api-listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "frontend-port-8081"
+    protocol                       = "Https"
+    ssl_certificate_name           = "ssl-cert"
+  }
+
   ssl_certificate {
     name     = "ssl-cert"
     data     = var.ssl_cert
@@ -210,9 +283,18 @@ resource "azurerm_application_gateway" "appgw" {
     backend_address_pool_name  = "frontend-pool"
     backend_http_settings_name = "http-settings-3000"
   }
+
+  # Temporary to test API
+  request_routing_rule {
+    name                       = "rule-8081"
+    rule_type                  = "Basic"
+    http_listener_name         = "api-listener"
+    backend_address_pool_name  = "backend-pool"
+    backend_http_settings_name = "http-settings-8081"
+  }
 }
 
-# Create a network profile for connecting endpoints to the subnet
+# Create a network profile for connecting the frontend container group to the subnet
 resource "azurerm_network_profile" "np-frontend" {
   name                = "network-profile-frontend"
   location            = azurerm_resource_group.rg.location
@@ -247,6 +329,22 @@ resource "azurerm_container_registry" "acr" {
   location            = azurerm_resource_group.rg.location
   sku                 = "Basic"
   admin_enabled       = true
+}
+
+# Create a storage account for the sqlserver databases
+resource "azurerm_storage_account" "storage" {
+  name                     = "sqlserverstorageacct"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+# Createa a share for the sqlserver storage account
+resource "azurerm_storage_share" "fileshare" {
+  name                 = "sqlserverfileshare"
+  storage_account_name = azurerm_storage_account.storage.name
+  quota                = 50 # In GBytes
 }
 
 # Create a container group for hosting containers for the frontend services
@@ -288,15 +386,53 @@ resource "azurerm_container_group" "aci-backend" {
   network_profile_id  = azurerm_network_profile.np-backend.id
 
   container {
-    name   = "backend-db"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-backend:latest"
+    name   = "sqlserver"
+    image  = "mcr.microsoft.com/mssql/server:2022-latest"
+    cpu    = "2"
+    memory = "4.0"
+
+    ports {
+      port     = 1433
+      protocol = "TCP"
+    }
+
+    environment_variables = {
+      ACCEPT_EULA = "Y"
+      SA_PASSWORD = var.sql_sa_password
+    }
+
+    volume {
+      name                 = "mssql-data"
+      mount_path           = "/var/opt/mssql"
+      read_only            = false
+      share_name           = azurerm_storage_share.fileshare.name
+      storage_account_name = azurerm_storage_account.storage.name
+      storage_account_key  = azurerm_storage_account.storage.primary_access_key
+    }
+  }
+
+  container {
+    name   = "api"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-api:latest"
     cpu    = "0.5"
     memory = "1.5"
 
     ports {
-      port     = 22
+      port     = 8080
       protocol = "TCP"
     }
+
+    ports {
+      port     = 8081
+      protocol = "TCP"
+    }
+
+    environment_variables = {
+      DB_SERVER = "10.0.2.4"
+      DB_NAME = "BuildingBlocks"
+      DB_USER = "sa"
+      DB_PASSWORD = var.sql_sa.password
+    } 
   }
 
   image_registry_credential {
@@ -450,8 +586,8 @@ resource "azurerm_eventgrid_system_topic" "acr_events" {
 }
 
 # Create an Event Grid subscription to the Logic App
-resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscription" {
-  name                = "logic-app-subscription"
+resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscription_frontend" {
+  name                = "logic-app-subscription-frontend"
   system_topic        = azurerm_eventgrid_system_topic.acr_events.name
   resource_group_name = azurerm_resource_group.rg.name
 
