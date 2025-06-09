@@ -333,7 +333,7 @@ resource "azurerm_container_registry" "acr" {
 
 # Create a storage account for the sqlserver databases
 resource "azurerm_storage_account" "storage" {
-  name                     = "sqlserverstorageacct"
+  name                     = "b2b2ssqlstorage"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
@@ -342,7 +342,7 @@ resource "azurerm_storage_account" "storage" {
 
 # Createa a share for the sqlserver storage account
 resource "azurerm_storage_share" "fileshare" {
-  name                 = "sqlserverfileshare"
+  name                 = "b2b2sqlfileshare"
   storage_account_name = azurerm_storage_account.storage.name
   quota                = 50 # In GBytes
 }
