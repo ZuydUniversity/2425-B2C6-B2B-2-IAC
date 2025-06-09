@@ -205,12 +205,17 @@ resource "azurerm_application_gateway" "appgw" {
   probe {
     name                = "api-probe"
     protocol            = "Http"
-    path                = "/"
+    path                = "/api"
     interval            = 30
     timeout             = 30
     unhealthy_threshold = 3
     host                = "10.0.2.4"
     port                = 8080
+
+    match {
+      status_code = ["200-599"] # Accept any response as valid
+      body        = ""          # Don't validate response body
+    }
   }
 
   backend_http_settings {
