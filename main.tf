@@ -426,18 +426,13 @@ resource "azurerm_container_group" "aci-backend" {
       protocol = "TCP"
     }
 
-    ports {
-      port     = 8081
-      protocol = "TCP"
-    }
-
     environment_variables = {
       DB_SERVER              = "10.0.2.4"
       DB_NAME                = "BuildingBlocks"
       DB_USER                = "sa"
       DB_PASSWORD            = var.sql_sa_password
-      ASPNETCORE_HTTPS_PORTS = 8081
       ASPNETCORE_HTTP_PORTS  = 8080
+      ASPNETCORE_URLS        = "http://0.0.0.0:8080"
     }
   }
 
