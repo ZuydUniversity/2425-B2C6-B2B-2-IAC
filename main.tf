@@ -432,20 +432,13 @@ resource "azurerm_container_group" "aci-backend" {
     }
 
     environment_variables = {
-      DB_SERVER   = "10.0.2.4"
-      DB_NAME     = "BuildingBlocks"
-      DB_USER     = "sa"
-      DB_PASSWORD = var.sql_sa_password
-    }
-
-    # Add liveness probe to check container health
-    liveness_probe {
-      http_get {
-        path = "/"
-        port = 8080
-      }
-      initial_delay_seconds = 30
-      period_seconds        = 10
+      DB_SERVER              = "10.0.2.4"
+      DB_NAME                = "BuildingBlocks"
+      DB_USER                = "sa"
+      DB_PASSWORD            = var.sql_sa_password
+      ASPNETCORE_HTTPS_PORTS = 8081
+      ASPNETCORE_HTTP_PORTS  = 8080
+      ASPNETCORE_URLS        = "http://0.0.0.0:8080;https://0.0.0.0:8081"
     }
   }
 
