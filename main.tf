@@ -438,7 +438,6 @@ resource "azurerm_container_group" "aci-backend" {
       DB_PASSWORD            = var.sql_sa_password
       ASPNETCORE_HTTPS_PORTS = 8081
       ASPNETCORE_HTTP_PORTS  = 8080
-      ASPNETCORE_URLS        = "http://0.0.0.0:8080;https://0.0.0.0:8081"
     }
   }
 
