@@ -201,6 +201,18 @@ resource "azurerm_application_gateway" "appgw" {
     ip_addresses = ["10.0.2.4"]
   }
 
+  # Add a health probe for  the API (temporary)
+  probe {
+    name                = "api-probe"
+    protocol            = "Http"
+    path                = "/"
+    interval            = 30
+    timeout             = 30
+    unhealthy_threshold = 3
+    host                = "10.0.2.4"
+    port                = 8080
+  }
+
   backend_http_settings {
     name                  = "http-settings-3000"
     port                  = 3000
@@ -216,6 +228,7 @@ resource "azurerm_application_gateway" "appgw" {
     protocol              = "Http"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
+    probe_name            = "api-probe"
   }
 
   redirect_configuration {
@@ -362,7 +375,7 @@ resource "azurerm_container_group" "aci-frontend" {
   }
 }
 
-# Container group for the backend services (still need to change the database and API image.)
+# Container group for the backend services
 resource "azurerm_container_group" "aci-backend" {
   name                = "container_group_backend_b2b"
   location            = azurerm_resource_group.rg.location
@@ -418,6 +431,16 @@ resource "azurerm_container_group" "aci-backend" {
       DB_NAME     = "BuildingBlocks"
       DB_USER     = "sa"
       DB_PASSWORD = var.sql_sa_password
+    }
+
+    # Add liveness probe to check container health
+    liveness_probe {
+      http_get {
+        path = "/"
+        port = 8080
+      }
+      initial_delay_seconds = 30
+      period_seconds        = 10
     }
   }
 
