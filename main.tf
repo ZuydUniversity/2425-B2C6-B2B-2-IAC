@@ -85,7 +85,7 @@ resource "azurerm_network_security_group" "backend-nsg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "8081" # HTTPS port used by API
+    destination_port_range     = "8081"        # HTTPS port used by API
     source_address_prefix      = "10.0.3.0/24" # Gateway subnet
     destination_address_prefix = "10.0.2.0/29" # Backend subnet
   }
@@ -428,11 +428,11 @@ resource "azurerm_container_group" "aci-backend" {
     }
 
     environment_variables = {
-      DB_SERVER = "10.0.2.4"
-      DB_NAME = "BuildingBlocks"
-      DB_USER = "sa"
-      DB_PASSWORD = var.sql_sa.password
-    } 
+      DB_SERVER   = "10.0.2.4"
+      DB_NAME     = "BuildingBlocks"
+      DB_USER     = "sa"
+      DB_PASSWORD = var.sql_sa_password
+    }
   }
 
   image_registry_credential {
