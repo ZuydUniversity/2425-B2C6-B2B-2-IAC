@@ -1,0 +1,28 @@
+name: API availability Test
+
+on:
+  workflow_run:
+    workflows: ["Website Reachability Test"]
+    types:
+      - completed
+
+jobs:
+  API-Availability-Check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: api-check
+        run: |
+          echo "API check gestart..."
+          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" http://b2b2buildingblocks.westeurope.cloudapp.azure.com:8080/api/Customers)
+          if [ "$STATUS" -eq 200 ]; then
+              echo "✅ Website is bereikbaar (status: $STATUS)"
+          elif [ "$STATUS" -ge 400 ] && [ "$STATUS" -lt 600 ]; then
+              echo "❌ Website geeft een fout (status: $STATUS)"
+              exit 1
+          elif [ -z "$STATUS" ] || [ "$STATUS" -eq 000 ]; then
+              echo "❌ Geen verbinding mogelijk met de website"
+              exit 1
+          else
+              echo "❌ Onverwachte status: $STATUS"
+          fi
