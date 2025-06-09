@@ -66,13 +66,13 @@ resource "azurerm_network_security_group" "backend-nsg" {
   resource_group_name = azurerm_resource_group.rg.name
 
   security_rule {
-    name                       = "AllowFrontendToDB"
+    name                       = "AllowFrontendToAPI"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "1433"        # Database port
+    destination_port_range     = "1433"        # API port
     source_address_prefix      = "10.0.1.0/29" # FROM frontend IP-addresses
     destination_address_prefix = "10.0.2.0/29" # TO backend IP-addresses
   }
