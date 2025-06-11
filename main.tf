@@ -427,12 +427,12 @@ resource "azurerm_container_group" "aci-backend" {
     }
 
     environment_variables = {
-      DB_SERVER              = "10.0.2.4"
-      DB_NAME                = "BuildingBlocks"
-      DB_USER                = "sa"
-      DB_PASSWORD            = var.sql_sa_password
-      ASPNETCORE_HTTP_PORTS  = 8080
-      ASPNETCORE_URLS        = "http://0.0.0.0:8080"
+      DB_SERVER             = "10.0.2.4"
+      DB_NAME               = "BuildingBlocks"
+      DB_USER               = "sa"
+      DB_PASSWORD           = var.sql_sa_password
+      ASPNETCORE_HTTP_PORTS = 8080
+      ASPNETCORE_URLS       = "http://0.0.0.0:8080"
     }
   }
 
@@ -569,6 +569,19 @@ resource "azurerm_logic_app_action_custom" "condition" {
       }
     }
   })
+}
+
+# Give the Logic App permissions to restart the Container resourceGroups
+resource "azurerm_role_assignment" "aci_restart_permission_backend" {
+  scope                = azurerm_container_group.aci-backend.id
+  role_definition_name = "Container Instance Contributor"
+  principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "aci_restart_permission_frontend" {
+  scope                = azurerm_container_group.aci-frontend.id
+  role_definition_name = "Container Instance Contributor"
+  principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
 }
 
 # Create an Event Grid System Topic for ACR events
