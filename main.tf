@@ -574,13 +574,13 @@ resource "azurerm_logic_app_action_custom" "condition" {
 # Give the Logic App permissions to restart the Container resourceGroups
 resource "azurerm_role_assignment" "aci_restart_permission_backend" {
   scope                = azurerm_container_group.aci-backend.id
-  role_definition_name = "Azure Container Instances Contributor"
+  role_definition_name = "Azure Container Instances Contributor Role"
   principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
 }
 
 resource "azurerm_role_assignment" "aci_restart_permission_frontend" {
   scope                = azurerm_container_group.aci-frontend.id
-  role_definition_name = "Azure Container Instances Contributor"
+  role_definition_name = "Azure Container Instances Contributor Role"
   principal_id         = azurerm_logic_app_workflow.webhook_handler.identity[0].principal_id
 }
 
