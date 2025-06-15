@@ -72,7 +72,7 @@ resource "azurerm_network_security_group" "backend-nsg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "1433"        # API port
+    destination_port_range     = "8080"        # API port
     source_address_prefix      = "10.0.1.0/29" # FROM frontend IP-addresses
     destination_address_prefix = "10.0.2.0/29" # TO backend IP-addresses
   }
