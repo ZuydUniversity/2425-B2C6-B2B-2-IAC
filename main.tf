@@ -160,8 +160,8 @@ resource "azurerm_application_gateway" "appgw" {
   resource_group_name = azurerm_resource_group.rg.name
 
   sku {
-    name     = "Standard_v2"
-    tier     = "Standard_v2"
+    name     = "Basic_v2"
+    tier     = "Basic_v2"
     capacity = 1
   }
 
