@@ -41,6 +41,11 @@ variable "sql_sa_password" {
   sensitive = true
 }
 
+variable "supabase_anon_key" {
+  type      = string
+  sensitive = true
+}
+
 # Data source to get current subscription ID
 data "azurerm_subscription" "current" {}
 
@@ -362,7 +367,7 @@ resource "azurerm_container_group" "aci-frontend" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend-remake:latest"
     cpu    = "0.5"
     memory = "1.5"
 
@@ -370,6 +375,11 @@ resource "azurerm_container_group" "aci-frontend" {
     ports {
       port     = 3000
       protocol = "TCP"
+    }
+
+    environment_variables {
+      NEXT_PUBLIC_SUPABASE_URL      = "https://inrqytgeznyswciycjtb.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
     }
   }
 
@@ -534,7 +544,7 @@ resource "azurerm_logic_app_action_custom" "condition" {
         {
           "contains" = [
             "@triggerBody()?[0]?['data']?['target']?['repository']",
-            "b2b-frontend"
+            "b2b-frontend-remake"
           ]
         }
       ]
@@ -615,7 +625,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   advanced_filter {
     string_contains {
       key    = "data.target.repository"
-      values = ["b2b-frontend"]
+      values = ["b2b-frontend-remake"]
     }
   }
 
