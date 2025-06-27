@@ -377,7 +377,7 @@ resource "azurerm_container_group" "aci-frontend" {
       protocol = "TCP"
     }
 
-    environment_variables {
+    environment_variables = {
       NEXT_PUBLIC_SUPABASE_URL      = "https://inrqytgeznyswciycjtb.supabase.co"
       NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
     }
