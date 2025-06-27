@@ -368,8 +368,8 @@ resource "azurerm_container_group" "aci-frontend" {
   container {
     name   = "frontendapp"
     image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend-remake:latest"
-    cpu    = "0.5"
-    memory = "1.5"
+    cpu    = "2"
+    memory = "4"
 
     # Open ports of the container
     ports {
