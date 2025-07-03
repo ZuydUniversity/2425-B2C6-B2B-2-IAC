@@ -367,7 +367,7 @@ resource "azurerm_container_group" "aci-frontend" {
 
   container {
     name   = "frontendapp"
-    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend-remake:latest"
+    image  = "${azurerm_container_registry.acr.login_server}/b2b-frontend:latest"
     cpu    = "2"
     memory = "4"
 
@@ -544,7 +544,7 @@ resource "azurerm_logic_app_action_custom" "condition" {
         {
           "contains" = [
             "@triggerBody()?[0]?['data']?['target']?['repository']",
-            "b2b-frontend-remake"
+            "b2b-frontend"
           ]
         }
       ]
@@ -625,7 +625,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "logic_app_subscrip
   advanced_filter {
     string_contains {
       key    = "data.target.repository"
-      values = ["b2b-frontend-remake"]
+      values = ["b2b-frontend"]
     }
   }
 
