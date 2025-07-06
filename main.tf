@@ -232,19 +232,26 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Add a health probe for the API (temporary)
   probe {
-    name                = "api-probe"
-    protocol            = "Https"
-    path                = "/api/Orders"
-    interval            = 30
-    timeout             = 30
-    host                = "127.0.0.1"
-    unhealthy_threshold = 3
-    port                = 8081
+    name                                = "api-probe"
+    protocol                            = "Https"
+    path                                = "/api/Orders"
+    interval                            = 30
+    timeout                             = 30
+    host                                = "127.0.0.1"
+    unhealthy_threshold                 = 3
+    port                                = 8081
+    pick_host_name_from_backend_address = true
 
     match {
       status_code = ["200-599"] # Accept any response as valid
       body        = ""          # Don't validate response body
     }
+  }
+
+  # Add a trusted root certificate for self-signed certs
+  trusted_root_certificate {
+    name = "self-signed-cert"
+    data = var.ssl_cert
   }
 
   probe {
