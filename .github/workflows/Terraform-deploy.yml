@@ -25,7 +25,6 @@ jobs:
       TF_VAR_ssl_cert_password: "${{ secrets.APPGW_SSL_CERT_PASSWORD }}"
       TF_VAR_ssl_cert: "${{ secrets.APPGW_SSL_CERT }}"
       TF_VAR_sql_sa_password: "${{ secrets.SQL_SA_PASSWORD }}"
-      TF_VAR_supabase_anon_key: "${{ secrets.SUPABASE_ANON_KEY }}"
 
       
     # Steps represent a sequence of tasks that will be executed as part of the job

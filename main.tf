@@ -41,11 +41,6 @@ variable "sql_sa_password" {
   sensitive = true
 }
 
-variable "supabase_anon_key" {
-  type      = string
-  sensitive = true
-}
-
 # Data source to get current subscription ID
 data "azurerm_subscription" "current" {}
 
@@ -208,13 +203,14 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Add a health probe for  the API (temporary)
   probe {
-    name                = "api-probe"
-    protocol            = "Http"
-    path                = "/api/Orders"
-    interval            = 30
-    timeout             = 30
-    unhealthy_threshold = 3
-    port                = 8080
+    name                                      = "api-probe"
+    protocol                                  = "Http"
+    path                                      = "/api/Orders"
+    interval                                  = 30
+    timeout                                   = 30
+    pick_host_name_from_backend_http_settings = true
+    unhealthy_threshold                       = 3
+    port                                      = 8080
 
     match {
       status_code = ["200-599"] # Accept any response as valid
@@ -375,11 +371,6 @@ resource "azurerm_container_group" "aci-frontend" {
       port     = 3000
       protocol = "TCP"
     }
-
-    environment_variables = {
-      NEXT_PUBLIC_SUPABASE_URL      = "https://inrqytgeznyswciycjtb.supabase.co"
-      NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
-    }
   }
 
   image_registry_credential {
@@ -440,6 +431,8 @@ resource "azurerm_container_group" "aci-backend" {
       DB_NAME               = "BuildingBlocks"
       DB_USER               = "sa"
       DB_PASSWORD           = var.sql_sa_password
+      SSL_CERTIFICATE       = var.ssl_cert
+      SSL_PRIVATE_KEY       = var.ssl_cert_password
       ASPNETCORE_HTTP_PORTS = 8080
       ASPNETCORE_URLS       = "http://0.0.0.0:8080"
     }
