@@ -78,7 +78,7 @@ resource "azurerm_network_security_group" "backend-nsg" {
   }
 
   security_rule {
-    name                       = "AllowFrontendToAPI"
+    name                       = "AllowFrontendToAPIHTTPS"
     priority                   = 101
     direction                  = "Inbound"
     access                     = "Allow"
@@ -103,7 +103,7 @@ resource "azurerm_network_security_group" "backend-nsg" {
   }
 
   security_rule {
-    name                       = "AllowPublicToApiTEMP"
+    name                       = "AllowPublicToApiHTTPS"
     priority                   = 106
     direction                  = "Inbound"
     access                     = "Allow"
