@@ -203,14 +203,14 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Add a health probe for  the API (temporary)
   probe {
-    name                                      = "api-probe"
-    protocol                                  = "Http"
-    path                                      = "/api/Orders"
-    interval                                  = 30
-    timeout                                   = 30
-    pick_host_name_from_backend_http_settings = true
-    unhealthy_threshold                       = 3
-    port                                      = 8080
+    name                = "api-probe"
+    protocol            = "Http"
+    path                = "/api/Orders"
+    interval            = 30
+    timeout             = 30
+    host                = "127.0.0.1"
+    unhealthy_threshold = 3
+    port                = 8080
 
     match {
       status_code = ["200-599"] # Accept any response as valid
