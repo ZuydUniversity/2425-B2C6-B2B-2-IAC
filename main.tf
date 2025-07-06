@@ -289,7 +289,7 @@ resource "azurerm_application_gateway" "appgw" {
     protocol                            = "Https"
     cookie_based_affinity               = "Disabled"
     request_timeout                     = 30
-    probe_name                          = "api-probe"
+    probe_name                          = "api-probe-http"
     trusted_root_certificate_names      = ["self-signed-cert"]
     pick_host_name_from_backend_address = false
     host_name                           = "127.0.0.1"
