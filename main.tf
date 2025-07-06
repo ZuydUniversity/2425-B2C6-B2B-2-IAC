@@ -41,6 +41,11 @@ variable "sql_sa_password" {
   sensitive = true
 }
 
+variable "root_cert_data" {
+  type      = string
+  sensitive = true
+}
+
 # Data source to get current subscription ID
 data "azurerm_subscription" "current" {}
 
@@ -250,7 +255,7 @@ resource "azurerm_application_gateway" "appgw" {
   # Add a trusted root certificate for self-signed certs
   trusted_root_certificate {
     name = "self-signed-cert"
-    data = var.ssl_cert
+    data = var.root_cert_data
   }
 
   probe {
