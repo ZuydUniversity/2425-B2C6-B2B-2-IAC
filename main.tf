@@ -319,6 +319,7 @@ resource "azurerm_application_gateway" "appgw" {
     frontend_ip_configuration_name = "frontend-ip"
     frontend_port_name             = "frontend-port-8081"
     protocol                       = "Https"
+    ssl_certificate_name           = "ssl-cert"
   }
 
   http_listener {
@@ -356,6 +357,14 @@ resource "azurerm_application_gateway" "appgw" {
     http_listener_name         = "api-listener"
     backend_address_pool_name  = "backend-pool"
     backend_http_settings_name = "http-settings-8081"
+  }
+
+  request_routing_rule {
+    name                       = "rule-8080"
+    rule_type                  = "Basic"
+    http_listener_name         = "api-listener-http"
+    backend_address_pool_name  = "backend-pool"
+    backend_http_settings_name = "http-settings-8080"
   }
 }
 
