@@ -461,7 +461,7 @@ resource "azurerm_container_group" "aci-backend" {
       DB_USER         = "sa"
       DB_PASSWORD     = var.sql_sa_password
       SSL_CERTIFICATE = var.ssl_cert
-      SSL_PRIVATE_KEY = var.ssl_cert_password
+      SSL_PASSWORD    = var.ssl_cert_password
       ASPNETCORE_URLS = "http://0.0.0.0:8080;https://0.0.0.0:8081"
     }
   }
