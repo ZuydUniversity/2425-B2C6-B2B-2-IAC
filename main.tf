@@ -210,6 +210,11 @@ resource "azurerm_application_gateway" "appgw" {
     port = 8081
   }
 
+  frontend_port {
+    name = "frontend-port-8080"
+    port = 8080
+  }
+
   frontend_ip_configuration {
     name                 = "frontend-ip"
     public_ip_address_id = azurerm_public_ip.appgw_ip.id
@@ -242,6 +247,22 @@ resource "azurerm_application_gateway" "appgw" {
     }
   }
 
+  probe {
+    name                = "api-probe-http"
+    protocol            = "Http"
+    path                = "/api/Orders"
+    interval            = 30
+    timeout             = 30
+    host                = "127.0.0.1"
+    unhealthy_threshold = 3
+    port                = 8080
+
+    match {
+      status_code = ["200-599"] # Accept any response as valid
+      body        = ""          # Don't validate response body
+    }
+  }
+
   backend_http_settings {
     name                  = "http-settings-3000"
     port                  = 3000
@@ -258,6 +279,15 @@ resource "azurerm_application_gateway" "appgw" {
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
     probe_name            = "api-probe"
+  }
+
+  backend_http_settings {
+    name                  = "http-settings-8080"
+    port                  = 8080
+    protocol              = "Http"
+    cookie_based_affinity = "Disabled"
+    request_timeout       = 30
+    probe_name            = "api-probe-http"
   }
 
   redirect_configuration {
@@ -288,6 +318,13 @@ resource "azurerm_application_gateway" "appgw" {
     name                           = "api-listener"
     frontend_ip_configuration_name = "frontend-ip"
     frontend_port_name             = "frontend-port-8081"
+    protocol                       = "Https"
+  }
+
+  http_listener {
+    name                           = "api-listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "frontend-port-8080"
     protocol                       = "Http"
   }
 
