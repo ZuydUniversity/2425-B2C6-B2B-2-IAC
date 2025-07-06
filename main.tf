@@ -198,23 +198,22 @@ resource "azurerm_application_gateway" "appgw" {
 
   backend_address_pool {
     name         = "frontend-pool"
-    ip_addresses = ["10.0.1.4"]
+    ip_addresses = ["10.0.1.4", "10.0.1.5", "10.0.1.6"]
   }
 
   backend_address_pool {
     name         = "backend-pool"
-    ip_addresses = ["10.0.2.4"]
+    ip_addresses = ["10.0.2.4", "10.0.2.5", "10.0.2.6"]
   }
 
   # Add a health probe for  the API (temporary)
   probe {
     name                = "api-probe"
     protocol            = "Http"
-    path                = "/api"
+    path                = "/api/Orders"
     interval            = 30
     timeout             = 30
     unhealthy_threshold = 3
-    host                = "10.0.2.4"
     port                = 8080
 
     match {
