@@ -199,6 +199,11 @@ resource "azurerm_application_gateway" "appgw" {
     subnet_id = azurerm_subnet.appgw_subnet.id
   }
 
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20170401S"  # More permissive policy
+  }
+
   frontend_port {
     name = "frontend-port-80"
     port = 80
@@ -241,9 +246,9 @@ resource "azurerm_application_gateway" "appgw" {
     protocol            = "Https"
     path                = "/api/Orders"
     interval            = 30
-    timeout             = 30
+    timeout             = 60
     host                = "127.0.0.1"
-    unhealthy_threshold = 3
+    unhealthy_threshold = 5
     port                = 8081
 
     match {
@@ -289,7 +294,7 @@ resource "azurerm_application_gateway" "appgw" {
     protocol                            = "Https"
     cookie_based_affinity               = "Disabled"
     request_timeout                     = 30
-    probe_name                          = "api-probe-http"
+    probe_name                          = "api-probe"
     trusted_root_certificate_names      = ["self-signed-cert"]
     pick_host_name_from_backend_address = false
     host_name                           = "127.0.0.1"
