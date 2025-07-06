@@ -182,8 +182,8 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary port to test the API
   frontend_port {
-    name = "frontend-port-8080"
-    port = 8080
+    name = "frontend-port-8081"
+    port = 8081
   }
 
   frontend_ip_configuration {
@@ -201,16 +201,16 @@ resource "azurerm_application_gateway" "appgw" {
     ip_addresses = ["10.0.2.4", "10.0.2.5", "10.0.2.6"]
   }
 
-  # Add a health probe for  the API (temporary)
+  # Add a health probe for the API (temporary)
   probe {
     name                = "api-probe"
-    protocol            = "Http"
+    protocol            = "Https"
     path                = "/api/Orders"
     interval            = 30
     timeout             = 30
     host                = "127.0.0.1"
     unhealthy_threshold = 3
-    port                = 8080
+    port                = 8081
 
     match {
       status_code = ["200-599"] # Accept any response as valid
@@ -228,9 +228,9 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary to test API
   backend_http_settings {
-    name                  = "http-settings-8080"
-    port                  = 8080
-    protocol              = "Http"
+    name                  = "http-settings-8081"
+    port                  = 8081
+    protocol              = "Https"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
     probe_name            = "api-probe"
@@ -263,7 +263,7 @@ resource "azurerm_application_gateway" "appgw" {
   http_listener {
     name                           = "api-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "frontend-port-8080"
+    frontend_port_name             = "frontend-port-8081"
     protocol                       = "Http"
   }
 
@@ -290,11 +290,11 @@ resource "azurerm_application_gateway" "appgw" {
 
   # Temporary to test API
   request_routing_rule {
-    name                       = "rule-8080"
+    name                       = "rule-8081"
     rule_type                  = "Basic"
     http_listener_name         = "api-listener"
     backend_address_pool_name  = "backend-pool"
-    backend_http_settings_name = "http-settings-8080"
+    backend_http_settings_name = "http-settings-8081"
   }
 }
 
@@ -422,19 +422,23 @@ resource "azurerm_container_group" "aci-backend" {
     memory = "1.5"
 
     ports {
+      port     = 8081
+      protocol = "TCP"
+    }
+
+    ports {
       port     = 8080
       protocol = "TCP"
     }
 
     environment_variables = {
-      DB_SERVER             = "10.0.2.4"
-      DB_NAME               = "BuildingBlocks"
-      DB_USER               = "sa"
-      DB_PASSWORD           = var.sql_sa_password
-      SSL_CERTIFICATE       = var.ssl_cert
-      SSL_PRIVATE_KEY       = var.ssl_cert_password
-      ASPNETCORE_HTTP_PORTS = 8080
-      ASPNETCORE_URLS       = "http://0.0.0.0:8080"
+      DB_SERVER       = "10.0.2.4"
+      DB_NAME         = "BuildingBlocks"
+      DB_USER         = "sa"
+      DB_PASSWORD     = var.sql_sa_password
+      SSL_CERTIFICATE = var.ssl_cert
+      SSL_PRIVATE_KEY = var.ssl_cert_password
+      ASPNETCORE_URLS = "http://0.0.0.0:8080;https://0.0.0.0:8081"
     }
   }
 
