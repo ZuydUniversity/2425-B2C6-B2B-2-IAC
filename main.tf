@@ -322,7 +322,7 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   http_listener {
-    name                           = "api-listener"
+    name                           = "api-listener-http"
     frontend_ip_configuration_name = "frontend-ip"
     frontend_port_name             = "frontend-port-8080"
     protocol                       = "Http"
