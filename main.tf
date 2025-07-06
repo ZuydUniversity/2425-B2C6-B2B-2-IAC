@@ -201,7 +201,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   ssl_policy {
     policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20170401S"  # More permissive policy
+    policy_name = "AppGwSslPolicy20170401S" # More permissive policy
   }
 
   frontend_port {
@@ -240,29 +240,6 @@ resource "azurerm_application_gateway" "appgw" {
     ip_addresses = ["10.0.2.4", "10.0.2.5", "10.0.2.6"]
   }
 
-  # Add a health probe for the API (temporary)
-  probe {
-    name                = "api-probe"
-    protocol            = "Https"
-    path                = "/api/Orders"
-    interval            = 30
-    timeout             = 60
-    host                = "127.0.0.1"
-    unhealthy_threshold = 5
-    port                = 8081
-
-    match {
-      status_code = ["200-599"] # Accept any response as valid
-      body        = ""          # Don't validate response body
-    }
-  }
-
-  # Add a trusted root certificate for self-signed certs
-  trusted_root_certificate {
-    name = "self-signed-cert"
-    data = var.root_cert_data
-  }
-
   probe {
     name                = "api-probe-http"
     protocol            = "Http"
@@ -285,19 +262,6 @@ resource "azurerm_application_gateway" "appgw" {
     protocol              = "Http"
     cookie_based_affinity = "Disabled"
     request_timeout       = 30
-  }
-
-  # Temporary to test API
-  backend_http_settings {
-    name                                = "http-settings-8081"
-    port                                = 8081
-    protocol                            = "Https"
-    cookie_based_affinity               = "Disabled"
-    request_timeout                     = 30
-    probe_name                          = "api-probe"
-    trusted_root_certificate_names      = ["self-signed-cert"]
-    pick_host_name_from_backend_address = false
-    host_name                           = "127.0.0.1"
   }
 
   backend_http_settings {
@@ -375,7 +339,7 @@ resource "azurerm_application_gateway" "appgw" {
     rule_type                  = "Basic"
     http_listener_name         = "api-listener"
     backend_address_pool_name  = "backend-pool"
-    backend_http_settings_name = "http-settings-8081"
+    backend_http_settings_name = "http-settings-8080"
   }
 
   request_routing_rule {
